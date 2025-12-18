@@ -1,0 +1,48 @@
+pipeline {
+    agent any
+
+    tools {
+        maven 'Maven'
+        jdk 'Java17'
+    }
+
+    stages {
+
+        stage('Checkout') {
+            steps {
+                echo "Clonage du dépôt Git..."
+                checkout scm
+            }
+        }
+
+        stage('Build') {
+            steps {
+                echo "Compilation et packaging..."
+                sh 'mvn clean package -DskipTests'
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                echo "Analyse SonarQube..."
+                withSonarQubeEnv('sq1') {
+                    sh '''
+                      mvn sonar:sonar \
+                      -Dsonar.projectKey=student-management \
+                      -Dsonar.projectName=student-management
+                    '''
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'Pipeline terminé avec succès !'
+        }
+        failure {
+            echo 'Pipeline échoué.'
+        }
+    }
+}
+ 
